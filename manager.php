@@ -12,13 +12,13 @@ initDB();
 </head>
 <body>
     <div class="header">
-        <h1>🎛️ Manager Control Panel</h1>
-        <a href="index.php" class="btn btn-back">← Back to Home</a>
+        <h1>■ Manager Control Panel</h1>
+        <a href="index.php" class="btn btn-back">◄ Back to Home</a>
     </div>
     
     <div class="actions">
         <button class="btn btn-primary" onclick="openCreateModal()">+ Create New Item</button>
-        <button class="btn btn-secondary" onclick="loadItems()">🔄 Refresh</button>
+        <button class="btn btn-secondary" onclick="loadItems()">↻ Refresh</button>
         <button class="btn btn-danger" onclick="clearDisplay()">Clear Display</button>
         <button class="btn btn-danger" onclick="endAuction()">End Auction</button>
     </div>
@@ -100,9 +100,9 @@ initDB();
                     <img src="${item.image_path}" alt="${item.name}">
                     <h3>${item.name}</h3>
                     <div class="item-actions">
-                        <button class="btn btn-secondary" onclick="displayItem(${item.id})">📺 Display</button>
-                        <button class="btn btn-primary" onclick="editItem(${item.id}, '${item.name.replace(/'/g, "\\'")}', '${item.image_path}')">✏️ Edit</button>
-                        <button class="btn btn-danger" onclick="deleteItem(${item.id})">🗑️ Delete</button>
+                        <button class="btn btn-secondary" onclick="displayItem(${item.id})">▶ Display</button>
+                        <button class="btn btn-primary" onclick="editItem(${item.id}, '${item.name.replace(/'/g, "\\'")}', '${item.image_path}')">✎ Edit</button>
+                        <button class="btn btn-danger" onclick="deleteItem(${item.id})">✕ Delete</button>
                     </div>
                 </div>
             `).join('');

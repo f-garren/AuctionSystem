@@ -11,9 +11,9 @@ initDB();
     <link rel="stylesheet" href="css/client.css">
 </head>
 <body>
-    <div class="status-indicator">
-        <div class="status-dot"></div>
-        <span>Connected</span>
+    <div class="status-indicator" id="statusIndicator">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Connected</span>
     </div>
     
     <div class="display-container" id="displayContainer">
@@ -23,32 +23,58 @@ initDB();
     <script>
         let currentItemId = null;
         let isFirstLoad = true;
+        let consecutiveFailures = 0;
+        const MAX_FAILURES = 2;
+        
+        function updateConnectionStatus(connected) {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const statusIndicator = document.getElementById('statusIndicator');
+            
+            if (connected) {
+                statusDot.classList.remove('disconnected');
+                statusDot.classList.add('connected');
+                statusText.textContent = 'Connected';
+                statusIndicator.classList.remove('disconnected');
+                consecutiveFailures = 0;
+            } else {
+                statusDot.classList.remove('connected');
+                statusDot.classList.add('disconnected');
+                statusText.textContent = 'Disconnected';
+                statusIndicator.classList.add('disconnected');
+            }
+        }
         
         function updateDisplay() {
-            fetch('api.php?action=get_current_display')
-                .then(r => r.json())
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            
+            fetch('api.php?action=get_current_display', {
+                method: 'GET',
+                signal: controller.signal
+            })
+                .then(r => {
+                    if (!r.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return r.json();
+                })
                 .then(data => {
                     if (data.success) {
+                        updateConnectionStatus(true);
                         const container = document.getElementById('displayContainer');
                         const newItemId = data.display.item_id;
                         const itemChanged = newItemId !== currentItemId;
                         
-                        // Only animate if the item actually changed (or on first load)
-                        // Also animate when transitioning to/from auction ended state
-                        const wasEnded = currentItemId == -1;
-                        const isEnded = newItemId == -1 || data.display.auction_ended;
-                        const shouldAnimate = itemChanged || isFirstLoad || (wasEnded !== isEnded);
-                        
                         if (newItemId && newItemId > 0 && data.display.name && data.display.image_path) {
                             container.innerHTML = `
-                                <img src="${data.display.image_path}" alt="${data.display.name}" 
-                                     class="item-image${shouldAnimate ? ' animate' : ''}">
-                                <div class="item-name${shouldAnimate ? ' animate' : ''}">${data.display.name}</div>
+                                <img src="${data.display.image_path}" alt="${data.display.name}" class="item-image">
+                                <div class="item-name">${data.display.name}</div>
                             `;
                         } else if (newItemId == -1 || data.display.auction_ended) {
-                            container.innerHTML = `<div class="no-item${shouldAnimate ? ' animate' : ''}">Thank you!</div>`;
+                            container.innerHTML = `<div class="no-item">Thank you!</div>`;
                         } else {
-                            container.innerHTML = `<div class="no-item${shouldAnimate ? ' animate' : ''}">Waiting for next item...</div>`;
+                            container.innerHTML = `<div class="no-item">Waiting for next item...</div>`;
                         }
                         
                         // Update current item ID and mark first load as complete
@@ -56,10 +82,18 @@ initDB();
                             currentItemId = newItemId;
                         }
                         isFirstLoad = false;
+                    } else {
+                        throw new Error('API returned unsuccessful response');
                     }
+                    clearTimeout(timeoutId);
                 })
                 .catch(err => {
+                    clearTimeout(timeoutId);
                     console.error('Error fetching display:', err);
+                    consecutiveFailures++;
+                    if (consecutiveFailures >= MAX_FAILURES) {
+                        updateConnectionStatus(false);
+                    }
                 });
         }
         

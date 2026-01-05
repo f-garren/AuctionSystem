@@ -16,15 +16,16 @@ body {
     background: linear-gradient(135deg, rgba(26, 31, 58, 0.95) 0%, rgba(10, 14, 39, 0.95) 100%);
     color: #d4af37;
     padding: 25px 30px;
-    border-radius: 10px;
     margin-bottom: 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border: 2px solid #d4af37;
+    border: 3px solid #d4af37;
     box-shadow: 
         0 0 20px rgba(212, 175, 55, 0.3),
         0 5px 15px rgba(0, 0, 0, 0.5);
+    /* Art Deco: Sharp corners */
+    clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 15px 100%, 0 calc(100% - 15px));
 }
 
 .header h1 {
@@ -34,21 +35,23 @@ body {
         0 0 10px rgba(212, 175, 55, 0.5),
         2px 2px 4px rgba(0, 0, 0, 0.8);
     letter-spacing: 1px;
+    text-transform: uppercase;
 }
 
 .btn {
     padding: 12px 24px;
     border: 2px solid #d4af37;
-    border-radius: 5px;
     cursor: pointer;
     font-size: 1em;
-    transition: all 0.3s ease;
+    transition: background 0.2s ease;
     text-decoration: none;
     display: inline-block;
     font-family: 'Georgia', serif;
     font-weight: 600;
     letter-spacing: 0.5px;
     text-transform: uppercase;
+    /* Art Deco: Sharp corners */
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
 }
 
 .btn-primary {
@@ -60,7 +63,6 @@ body {
 .btn-primary:hover {
     background: linear-gradient(135deg, rgba(212, 175, 55, 0.4) 0%, rgba(212, 175, 55, 0.2) 100%);
     box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
-    transform: translateY(-2px);
 }
 
 .btn-secondary {
@@ -72,7 +74,6 @@ body {
 .btn-secondary:hover {
     background: linear-gradient(135deg, rgba(212, 175, 55, 0.3) 0%, rgba(212, 175, 55, 0.15) 100%);
     box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
-    transform: translateY(-2px);
 }
 
 .btn-danger {
@@ -84,7 +85,6 @@ body {
 .btn-danger:hover {
     background: linear-gradient(135deg, rgba(184, 134, 11, 0.4) 0%, rgba(184, 134, 11, 0.2) 100%);
     box-shadow: 0 0 15px rgba(184, 134, 11, 0.5);
-    transform: translateY(-2px);
 }
 
 .btn-back {
@@ -115,16 +115,16 @@ body {
 .item-card {
     background: linear-gradient(135deg, rgba(26, 31, 58, 0.9) 0%, rgba(10, 14, 39, 0.9) 100%);
     border: 2px solid #d4af37;
-    border-radius: 10px;
     padding: 20px;
     box-shadow: 
         0 0 15px rgba(212, 175, 55, 0.2),
         0 5px 15px rgba(0, 0, 0, 0.5);
-    transition: all 0.3s ease;
+    transition: box-shadow 0.2s ease;
+    /* Art Deco: Sharp corners */
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
 }
 
 .item-card:hover {
-    transform: translateY(-5px);
     box-shadow: 
         0 0 25px rgba(212, 175, 55, 0.4),
         0 10px 25px rgba(0, 0, 0, 0.7);
@@ -135,7 +135,7 @@ body {
     width: 100%;
     height: 200px;
     object-fit: cover;
-    border-radius: 5px;
+    border-radius: 8px;
     margin-bottom: 15px;
     border: 1px solid rgba(212, 175, 55, 0.3);
 }
@@ -145,6 +145,8 @@ body {
     color: #d4af37;
     font-weight: bold;
     text-shadow: 0 0 5px rgba(212, 175, 55, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .item-actions {
@@ -174,12 +176,13 @@ body {
     border: 3px solid #d4af37;
     margin: 50px auto;
     padding: 30px;
-    border-radius: 10px;
     width: 90%;
     max-width: 500px;
     box-shadow: 
         0 0 30px rgba(212, 175, 55, 0.4),
         0 20px 60px rgba(0, 0, 0, 0.8);
+    /* Art Deco: Sharp corners */
+    clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
 }
 
 .modal-header {
@@ -195,6 +198,7 @@ body {
     color: #d4af37;
     font-weight: bold;
     text-shadow: 0 0 5px rgba(212, 175, 55, 0.3);
+    text-transform: uppercase;
 }
 
 .close {
@@ -202,13 +206,13 @@ body {
     font-weight: bold;
     cursor: pointer;
     color: #d4af37;
-    transition: all 0.3s ease;
+    transition: color 0.2s ease;
+    line-height: 1;
 }
 
 .close:hover {
     color: #f4d03f;
     text-shadow: 0 0 10px rgba(244, 208, 63, 0.5);
-    transform: scale(1.1);
 }
 
 .form-group {
@@ -221,6 +225,8 @@ body {
     font-weight: 600;
     color: #d4af37;
     text-shadow: 0 0 3px rgba(212, 175, 55, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .form-group input,
@@ -228,11 +234,12 @@ body {
     width: 100%;
     padding: 12px;
     border: 2px solid rgba(212, 175, 55, 0.5);
-    border-radius: 5px;
     font-size: 1em;
     background: rgba(10, 14, 39, 0.8);
     color: #d4af37;
     font-family: 'Georgia', serif;
+    /* Art Deco: Sharp corners */
+    clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
 }
 
 .form-group input:focus {
@@ -260,9 +267,10 @@ body {
     border-left: 5px solid #d4af37;
     padding: 15px;
     margin-bottom: 20px;
-    border-radius: 5px;
     color: #d4af37;
     box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+    /* Art Deco: Sharp corners */
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
 }
 
 .empty-state {
@@ -270,6 +278,8 @@ body {
     padding: 40px;
     color: rgba(212, 175, 55, 0.6);
     font-size: 1.2em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .image-note {
@@ -286,7 +296,7 @@ body {
 
 .current-image-preview img {
     max-width: 100%;
-    border-radius: 5px;
+    border-radius: 8px;
     border: 2px solid rgba(212, 175, 55, 0.3);
 }
 

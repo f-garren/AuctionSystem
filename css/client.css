@@ -17,7 +17,7 @@ body {
     position: relative;
 }
 
-/* Starry night sky effect */
+/* Static starry night sky effect - no animation */
 body::before {
     content: '';
     position: absolute;
@@ -36,14 +36,8 @@ body::before {
         radial-gradient(1px 1px at 70% 40%, #d4af37, transparent),
         radial-gradient(2px 2px at 40% 20%, #d4af37, transparent);
     background-size: 200% 200%;
-    animation: twinkle 8s ease-in-out infinite;
     opacity: 0.6;
     z-index: 0;
-}
-
-@keyframes twinkle {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 0.8; }
 }
 
 .display-container {
@@ -62,16 +56,12 @@ body::before {
     max-width: 90%;
     max-height: 70vh;
     object-fit: contain;
-    border-radius: 10px;
+    border-radius: 8px;
     box-shadow: 
         0 0 30px rgba(212, 175, 55, 0.4),
         0 10px 40px rgba(0, 0, 0, 0.8);
     margin-bottom: 30px;
     border: 3px solid rgba(212, 175, 55, 0.3);
-}
-
-.item-image.animate {
-    animation: fadeIn 0.5s ease-in;
 }
 
 .item-name {
@@ -85,10 +75,7 @@ body::before {
     padding: 0 20px;
     color: #d4af37;
     letter-spacing: 3px;
-}
-
-.item-name.animate {
-    animation: fadeIn 0.5s ease-in;
+    text-transform: uppercase;
 }
 
 .no-item {
@@ -101,21 +88,7 @@ body::before {
         2px 2px 8px rgba(0, 0, 0, 0.8);
     font-weight: bold;
     letter-spacing: 2px;
-}
-
-.no-item.animate {
-    animation: fadeIn 0.5s ease-in;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    text-transform: uppercase;
 }
 
 .status-indicator {
@@ -125,7 +98,6 @@ body::before {
     padding: 12px 24px;
     background: linear-gradient(135deg, rgba(26, 31, 58, 0.9) 0%, rgba(10, 14, 39, 0.9) 100%);
     border: 2px solid rgba(212, 175, 55, 0.5);
-    border-radius: 25px;
     font-size: 0.9em;
     display: flex;
     align-items: center;
@@ -133,24 +105,33 @@ body::before {
     color: #d4af37;
     box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
     z-index: 10;
+    /* Art Deco: Sharp corners */
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+    transition: all 0.3s ease;
+}
+
+.status-indicator.disconnected {
+    border-color: rgba(220, 53, 69, 0.5);
+    color: #dc3545;
+    box-shadow: 0 0 15px rgba(220, 53, 69, 0.2);
 }
 
 .status-dot {
     width: 12px;
     height: 12px;
-    border-radius: 50%;
     background: #d4af37;
     box-shadow: 0 0 10px rgba(212, 175, 55, 0.8);
-    animation: pulse 2s infinite;
+    /* Art Deco: Diamond shape */
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    transition: all 0.3s ease;
 }
 
-@keyframes pulse {
-    0%, 100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 0.6;
-        transform: scale(1.1);
-    }
+.status-dot.connected {
+    background: #d4af37;
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.8);
+}
+
+.status-dot.disconnected {
+    background: #dc3545;
+    box-shadow: 0 0 10px rgba(220, 53, 69, 0.8);
 }

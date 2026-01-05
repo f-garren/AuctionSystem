@@ -12,7 +12,7 @@ initDB();
 </head>
 <body>
     <div class="container">
-        <h1>🏛️ Auction Display System</h1>
+        <h1>■ Auction Display System</h1>
         <div class="mode-buttons">
             <a href="manager.php" class="mode-btn manager">Manager</a>
             <a href="client.php" class="mode-btn client">Client Display</a>
