@@ -110,7 +110,8 @@ GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost';
 FLUSH PRIVILEGES;
 EOF
 else
-    mysql -u root -p"${MYSQL_ROOT_PASSWORD}" <<EOF
+    # Use --defaults-file to avoid password on command line warning
+    mysql -u root -p"${MYSQL_ROOT_PASSWORD}" 2>/dev/null <<EOF
 CREATE DATABASE IF NOT EXISTS ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';
 GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost';
@@ -141,35 +142,32 @@ if [ ! -f "${SCRIPT_DIR}/config.php" ]; then
 fi
 
 # Update config.php with database credentials
-sed -i "s/define('DB_HOST', '.*');/define('DB_HOST', 'localhost');/" "${SCRIPT_DIR}/config.php"
-sed -i "s/define('DB_NAME', '.*');/define('DB_NAME', '${DB_NAME}');/" "${SCRIPT_DIR}/config.php"
-sed -i "s/define('DB_USER', '.*');/define('DB_USER', '${DB_USER}');/" "${SCRIPT_DIR}/config.php"
-sed -i "s/define('DB_PASS', '.*');/define('DB_PASS', '${DB_PASS}');/" "${SCRIPT_DIR}/config.php"
+# Use # as delimiter (won't appear in base64 passwords) to avoid issues with special characters
+sed -i "s#define('DB_HOST', '.*');#define('DB_HOST', 'localhost');#" "${SCRIPT_DIR}/config.php"
+sed -i "s#define('DB_NAME', '.*');#define('DB_NAME', '${DB_NAME}');#" "${SCRIPT_DIR}/config.php"
+sed -i "s#define('DB_USER', '.*');#define('DB_USER', '${DB_USER}');#" "${SCRIPT_DIR}/config.php"
+# For password, escape single quotes by replacing ' with '\''
+DB_PASS_ESCAPED=$(printf '%s\n' "$DB_PASS" | sed "s/'/'\\\\''/g")
+sed -i "s#define('DB_PASS', '.*');#define('DB_PASS', '${DB_PASS_ESCAPED}');#" "${SCRIPT_DIR}/config.php"
 
-# Create Apache virtual host (optional - for custom domain)
-print_status "Checking Apache configuration..."
+# Create Apache virtual host (automatic for internal use)
+print_status "Configuring Apache virtual host..."
 
-# Get server IP or hostname
+# Get server IP
 SERVER_IP=$(hostname -I | awk '{print $1}')
 SERVER_NAME=$(hostname)
 
-# Check if we should create a virtual host
-read -p "Do you want to create an Apache virtual host? (y/n) " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    read -p "Enter domain name or leave blank for IP access: " DOMAIN_NAME
-    
-    if [ -z "$DOMAIN_NAME" ]; then
-        DOMAIN_NAME="$SERVER_IP"
-    fi
-    
-    VHOST_FILE="/etc/apache2/sites-available/auction-system.conf"
-    cat > "$VHOST_FILE" <<EOF
+# Use IP address for internal use
+DOMAIN_NAME="$SERVER_IP"
+
+VHOST_FILE="/etc/apache2/sites-available/auction-system.conf"
+print_status "Creating virtual host for IP: ${SERVER_IP}"
+cat > "$VHOST_FILE" <<EOF
 <VirtualHost *:80>
-    ServerName ${DOMAIN_NAME}
-    DocumentRoot ${SCRIPT_DIR}
+    ServerName ${SERVER_IP}
+    DocumentRoot "${SCRIPT_DIR}"
     
-    <Directory ${SCRIPT_DIR}>
+    <Directory "${SCRIPT_DIR}">
         Options -Indexes +FollowSymLinks
         AllowOverride All
         Require all granted
@@ -179,36 +177,19 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     CustomLog \${APACHE_LOG_DIR}/auction-system-access.log combined
 </VirtualHost>
 EOF
-    
+
+# Test Apache configuration before enabling
+print_status "Testing Apache configuration..."
+apache2ctl configtest > /dev/null 2>&1
+if [ $? -eq 0 ]; then
     a2ensite auction-system.conf
     a2dissite 000-default.conf 2>/dev/null || true
     systemctl reload apache2
-    print_status "Virtual host created and enabled"
+    print_status "Virtual host created and enabled for IP access"
 else
-    # Configure default Apache site to point to project directory
-    print_status "Configuring default Apache site..."
-    DEFAULT_SITE="/etc/apache2/sites-available/000-default.conf"
-    if [ -f "$DEFAULT_SITE" ]; then
-        # Backup original
-        cp "$DEFAULT_SITE" "${DEFAULT_SITE}.backup"
-        # Update DocumentRoot
-        sed -i "s|DocumentRoot .*|DocumentRoot ${SCRIPT_DIR}|" "$DEFAULT_SITE"
-        # Add directory configuration if not present
-        if ! grep -q "<Directory ${SCRIPT_DIR}>" "$DEFAULT_SITE"; then
-            sed -i "/<\/VirtualHost>/i\\
-    <Directory ${SCRIPT_DIR}>\\
-        Options -Indexes +FollowSymLinks\\
-        AllowOverride All\\
-        Require all granted\\
-    </Directory>\\
-" "$DEFAULT_SITE"
-        fi
-        systemctl reload apache2
-        print_status "Default Apache site configured to use: ${SCRIPT_DIR}"
-    else
-        print_warning "Default Apache site configuration not found"
-        print_warning "You may need to configure Apache DocumentRoot manually"
-    fi
+    print_error "Apache configuration test failed!"
+    print_error "Please check: apache2ctl configtest"
+    exit 1
 fi
 
 # Initialize database tables
@@ -225,19 +206,7 @@ try {
 }
 "
 
-# Set proper permissions (must be done after all configuration)
-print_status "Setting file permissions..."
-chown -R www-data:www-data "${SCRIPT_DIR}"
-find "${SCRIPT_DIR}" -type f -exec chmod 644 {} \;
-find "${SCRIPT_DIR}" -type d -exec chmod 755 {} \;
-chmod 755 "${SCRIPT_DIR}/setup.sh" 2>/dev/null || true
-chmod 777 "${SCRIPT_DIR}/uploads"
-# Ensure .git directory is accessible if it exists
-if [ -d "${SCRIPT_DIR}/.git" ]; then
-    chown -R www-data:www-data "${SCRIPT_DIR}/.git" 2>/dev/null || true
-fi
-
-# Restart Apache
+# Restart Apache before setting permissions
 print_status "Restarting Apache..."
 systemctl restart apache2
 
@@ -269,31 +238,46 @@ cat >> "$CREDENTIALS_FILE" <<EOF
 # System Information
 WEB_ROOT=${SCRIPT_DIR}
 SERVER_IP=${SERVER_IP}
+ACCESS_URL=http://${SERVER_IP}
 EOF
 
-if [ -n "$DOMAIN_NAME" ] && [ "$DOMAIN_NAME" != "$SERVER_IP" ]; then
-    echo "DOMAIN_NAME=${DOMAIN_NAME}" >> "$CREDENTIALS_FILE"
-    echo "ACCESS_URL=http://${DOMAIN_NAME}" >> "$CREDENTIALS_FILE"
-else
-    echo "ACCESS_URL=http://${SERVER_IP} or http://localhost" >> "$CREDENTIALS_FILE"
-fi
-
-# Set secure permissions on credentials file
+# Set secure permissions on credentials file first
 chmod 600 "$CREDENTIALS_FILE"
 chown root:root "$CREDENTIALS_FILE" 2>/dev/null || chown $SUDO_USER:$SUDO_USER "$CREDENTIALS_FILE" 2>/dev/null || true
 
-# Final permissions check and fix (exclude credentials file and .git)
-print_status "Performing final permissions check..."
+# Set proper permissions for Apache (must be done at the very end)
+print_status "Setting file permissions for Apache..."
+# Ensure parent directories are traversable (at least execute permission)
+PARENT_DIR=$(dirname "${SCRIPT_DIR}")
+while [ "$PARENT_DIR" != "/" ]; do
+    chmod o+x "$PARENT_DIR" 2>/dev/null || true
+    PARENT_DIR=$(dirname "$PARENT_DIR")
+done
+
+# Set ownership and permissions for the project directory
 chown -R www-data:www-data "${SCRIPT_DIR}"
-# Exclude credentials file and .git from permission changes
-find "${SCRIPT_DIR}" -type f ! -path "*/.git/*" ! -name ".credentials" -exec chmod 644 {} \;
+# Set file permissions (exclude .git and credentials)
+find "${SCRIPT_DIR}" -type f ! -path "*/.git/*" ! -name ".credentials" ! -name "setup.sh" -exec chmod 644 {} \;
 find "${SCRIPT_DIR}" -type d ! -path "*/.git/*" -exec chmod 755 {} \;
-chmod 777 "${SCRIPT_DIR}/uploads"
-# Keep setup script executable for owner
+# Special permissions
 chmod 755 "${SCRIPT_DIR}/setup.sh" 2>/dev/null || true
+chmod 777 "${SCRIPT_DIR}/uploads"
 # Restore credentials file permissions
 chmod 600 "$CREDENTIALS_FILE" 2>/dev/null || true
 chown root:root "$CREDENTIALS_FILE" 2>/dev/null || chown $SUDO_USER:$SUDO_USER "$CREDENTIALS_FILE" 2>/dev/null || true
+
+# Final Apache restart to ensure everything is loaded
+print_status "Performing final Apache restart..."
+systemctl restart apache2
+
+# Verify permissions
+print_status "Verifying permissions..."
+if [ -r "${SCRIPT_DIR}/index.php" ] && [ -r "${SCRIPT_DIR}/config.php" ]; then
+    print_status "File permissions verified successfully"
+else
+    print_warning "Warning: Some files may not be readable by Apache"
+    print_warning "Run: sudo chown -R www-data:www-data ${SCRIPT_DIR}"
+fi
 
 # Display summary
 echo ""
@@ -313,12 +297,8 @@ else
 fi
 echo ""
 echo "Access the system:"
-if [ -n "$DOMAIN_NAME" ] && [ "$DOMAIN_NAME" != "$SERVER_IP" ]; then
-    echo "  http://${DOMAIN_NAME}"
-else
-    echo "  http://${SERVER_IP}"
-    echo "  http://localhost"
-fi
+echo "  http://${SERVER_IP}"
+echo "  http://localhost"
 echo ""
 print_status "Credentials have been saved to: ${CREDENTIALS_FILE}"
 print_warning "IMPORTANT: This file contains sensitive information. Keep it secure!"
