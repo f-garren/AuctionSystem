@@ -116,6 +116,40 @@ The setup script will:
 - `POST api.php` (action=update_item) - Update existing item
 - `POST api.php` (action=delete_item) - Delete item
 
+## Troubleshooting
+
+### "Forbidden" Error (403)
+
+If you see a "Forbidden" error when accessing the website, it's usually a permissions issue. Re-run the setup script:
+
+```bash
+sudo ./setup.sh
+```
+
+The setup script will automatically fix file ownership and permissions. Alternatively, you can manually fix permissions:
+
+```bash
+sudo chown -R www-data:www-data /path/to/AuctionSystem/
+sudo find /path/to/AuctionSystem -type f -exec chmod 644 {} \;
+sudo find /path/to/AuctionSystem -type d -exec chmod 755 {} \;
+sudo chmod 777 /path/to/AuctionSystem/uploads
+sudo systemctl restart apache2
+```
+
+### Database Connection Errors
+
+- Verify MySQL is running: `sudo systemctl status mysql`
+- Check database credentials in `config.php`
+- Verify database exists: `mysql -u root -p -e "SHOW DATABASES;"`
+- Check credentials file: `cat .credentials` (if setup script was used)
+
+### Apache Not Serving Files
+
+- Check Apache is running: `sudo systemctl status apache2`
+- Verify DocumentRoot points to the project directory
+- Check Apache error logs: `sudo tail -f /var/log/apache2/error.log`
+- Ensure mod_rewrite is enabled: `sudo a2enmod rewrite`
+
 ## Notes
 
 - The system uses MySQL for robust data management

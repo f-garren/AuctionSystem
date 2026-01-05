@@ -2,6 +2,9 @@
 uploads/*
 !uploads/.gitkeep
 
+# Credentials (contains sensitive database passwords)
+.credentials
+
 # OS files
 .DS_Store
 Thumbs.db

@@ -146,14 +146,6 @@ sed -i "s/define('DB_NAME', '.*');/define('DB_NAME', '${DB_NAME}');/" "${SCRIPT_
 sed -i "s/define('DB_USER', '.*');/define('DB_USER', '${DB_USER}');/" "${SCRIPT_DIR}/config.php"
 sed -i "s/define('DB_PASS', '.*');/define('DB_PASS', '${DB_PASS}');/" "${SCRIPT_DIR}/config.php"
 
-# Set proper permissions
-print_status "Setting file permissions..."
-chown -R www-data:www-data "${SCRIPT_DIR}"
-find "${SCRIPT_DIR}" -type f -exec chmod 644 {} \;
-find "${SCRIPT_DIR}" -type d -exec chmod 755 {} \;
-chmod 755 "${SCRIPT_DIR}/setup.sh"
-chmod 777 "${SCRIPT_DIR}/uploads"
-
 # Create Apache virtual host (optional - for custom domain)
 print_status "Checking Apache configuration..."
 
@@ -193,9 +185,30 @@ EOF
     systemctl reload apache2
     print_status "Virtual host created and enabled"
 else
-    # Just set document root to project directory if using default
-    print_status "Using default Apache configuration"
-    print_warning "You may need to configure Apache DocumentRoot manually"
+    # Configure default Apache site to point to project directory
+    print_status "Configuring default Apache site..."
+    DEFAULT_SITE="/etc/apache2/sites-available/000-default.conf"
+    if [ -f "$DEFAULT_SITE" ]; then
+        # Backup original
+        cp "$DEFAULT_SITE" "${DEFAULT_SITE}.backup"
+        # Update DocumentRoot
+        sed -i "s|DocumentRoot .*|DocumentRoot ${SCRIPT_DIR}|" "$DEFAULT_SITE"
+        # Add directory configuration if not present
+        if ! grep -q "<Directory ${SCRIPT_DIR}>" "$DEFAULT_SITE"; then
+            sed -i "/<\/VirtualHost>/i\\
+    <Directory ${SCRIPT_DIR}>\\
+        Options -Indexes +FollowSymLinks\\
+        AllowOverride All\\
+        Require all granted\\
+    </Directory>\\
+" "$DEFAULT_SITE"
+        fi
+        systemctl reload apache2
+        print_status "Default Apache site configured to use: ${SCRIPT_DIR}"
+    else
+        print_warning "Default Apache site configuration not found"
+        print_warning "You may need to configure Apache DocumentRoot manually"
+    fi
 fi
 
 # Initialize database tables
@@ -212,9 +225,75 @@ try {
 }
 "
 
+# Set proper permissions (must be done after all configuration)
+print_status "Setting file permissions..."
+chown -R www-data:www-data "${SCRIPT_DIR}"
+find "${SCRIPT_DIR}" -type f -exec chmod 644 {} \;
+find "${SCRIPT_DIR}" -type d -exec chmod 755 {} \;
+chmod 755 "${SCRIPT_DIR}/setup.sh" 2>/dev/null || true
+chmod 777 "${SCRIPT_DIR}/uploads"
+# Ensure .git directory is accessible if it exists
+if [ -d "${SCRIPT_DIR}/.git" ]; then
+    chown -R www-data:www-data "${SCRIPT_DIR}/.git" 2>/dev/null || true
+fi
+
 # Restart Apache
 print_status "Restarting Apache..."
 systemctl restart apache2
+
+# Save credentials to file
+CREDENTIALS_FILE="${SCRIPT_DIR}/.credentials"
+print_status "Saving credentials to ${CREDENTIALS_FILE}..."
+cat > "$CREDENTIALS_FILE" <<EOF
+# Auction Display System - Database Credentials
+# Generated on: $(date)
+# 
+# IMPORTANT: Keep this file secure and do not commit it to version control!
+
+# Database Configuration
+DATABASE_NAME=${DB_NAME}
+DATABASE_USER=${DB_USER}
+DATABASE_PASSWORD=${DB_PASS}
+
+# MySQL Root Password
+EOF
+
+if [ -n "$MYSQL_ROOT_PASSWORD" ]; then
+    echo "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}" >> "$CREDENTIALS_FILE"
+else
+    echo "MYSQL_ROOT_PASSWORD=(not set or already configured)" >> "$CREDENTIALS_FILE"
+fi
+
+cat >> "$CREDENTIALS_FILE" <<EOF
+
+# System Information
+WEB_ROOT=${SCRIPT_DIR}
+SERVER_IP=${SERVER_IP}
+EOF
+
+if [ -n "$DOMAIN_NAME" ] && [ "$DOMAIN_NAME" != "$SERVER_IP" ]; then
+    echo "DOMAIN_NAME=${DOMAIN_NAME}" >> "$CREDENTIALS_FILE"
+    echo "ACCESS_URL=http://${DOMAIN_NAME}" >> "$CREDENTIALS_FILE"
+else
+    echo "ACCESS_URL=http://${SERVER_IP} or http://localhost" >> "$CREDENTIALS_FILE"
+fi
+
+# Set secure permissions on credentials file
+chmod 600 "$CREDENTIALS_FILE"
+chown root:root "$CREDENTIALS_FILE" 2>/dev/null || chown $SUDO_USER:$SUDO_USER "$CREDENTIALS_FILE" 2>/dev/null || true
+
+# Final permissions check and fix (exclude credentials file and .git)
+print_status "Performing final permissions check..."
+chown -R www-data:www-data "${SCRIPT_DIR}"
+# Exclude credentials file and .git from permission changes
+find "${SCRIPT_DIR}" -type f ! -path "*/.git/*" ! -name ".credentials" -exec chmod 644 {} \;
+find "${SCRIPT_DIR}" -type d ! -path "*/.git/*" -exec chmod 755 {} \;
+chmod 777 "${SCRIPT_DIR}/uploads"
+# Keep setup script executable for owner
+chmod 755 "${SCRIPT_DIR}/setup.sh" 2>/dev/null || true
+# Restore credentials file permissions
+chmod 600 "$CREDENTIALS_FILE" 2>/dev/null || true
+chown root:root "$CREDENTIALS_FILE" 2>/dev/null || chown $SUDO_USER:$SUDO_USER "$CREDENTIALS_FILE" 2>/dev/null || true
 
 # Display summary
 echo ""
@@ -241,8 +320,8 @@ else
     echo "  http://localhost"
 fi
 echo ""
-print_warning "IMPORTANT: Save the database passwords shown above!"
-print_warning "You can find them in this script's output or check config.php"
+print_status "Credentials have been saved to: ${CREDENTIALS_FILE}"
+print_warning "IMPORTANT: This file contains sensitive information. Keep it secure!"
 echo ""
 print_status "The system is ready to use!"
 echo ""
