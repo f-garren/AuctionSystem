@@ -303,3 +303,77 @@ body {
 .hidden {
     display: none;
 }
+
+.banner {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2000;
+    padding: 15px 30px;
+    min-width: 300px;
+    max-width: 600px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    box-shadow: 
+        0 0 20px rgba(212, 175, 55, 0.4),
+        0 10px 30px rgba(0, 0, 0, 0.6);
+    /* Art Deco: Sharp corners */
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.banner.success {
+    background: linear-gradient(135deg, rgba(26, 31, 58, 0.98) 0%, rgba(10, 14, 39, 0.98) 100%);
+    border: 3px solid #d4af37;
+    color: #d4af37;
+}
+
+.banner.error {
+    background: linear-gradient(135deg, rgba(58, 26, 26, 0.98) 0%, rgba(39, 10, 10, 0.98) 100%);
+    border: 3px solid #dc3545;
+    color: #dc3545;
+}
+
+.banner-close {
+    background: transparent;
+    border: 2px solid currentColor;
+    color: inherit;
+    cursor: pointer;
+    font-size: 18px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: all 0.2s ease;
+    /* Art Deco: Sharp corners */
+    clip-path: polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px));
+    flex-shrink: 0;
+}
+
+.banner-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.1);
+}
+
+#bannerMessage {
+    flex: 1;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}

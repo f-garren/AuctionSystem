@@ -17,22 +17,31 @@ try {
             break;
             
         case 'get_current_display':
-            $stmt = $db->query("SELECT cd.item_id, i.name, i.image_path 
+            $stmt = $db->query("SELECT cd.item_id, cd.auction_ended, i.name, i.image_path 
                                FROM current_display cd 
                                LEFT JOIN items i ON cd.item_id = i.id 
                                WHERE cd.id = 1");
             $display = $stmt->fetch(PDO::FETCH_ASSOC);
-            // item_id = -1 means auction ended
-            if ($display && $display['item_id'] == -1) {
-                $display['auction_ended'] = true;
+            // Convert boolean to proper format
+            if ($display) {
+                $display['auction_ended'] = (bool)$display['auction_ended'];
             }
             echo json_encode(['success' => true, 'display' => $display]);
             break;
             
         case 'set_current_display':
             $item_id = $_POST['item_id'] ?? null;
-            $stmt = $db->prepare("UPDATE current_display SET item_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1");
-            $stmt->execute([$item_id]);
+            $auction_ended = isset($_POST['auction_ended']) ? (bool)$_POST['auction_ended'] : false;
+            
+            // Convert empty string to NULL
+            if ($item_id === '' || $item_id === null) {
+                $item_id = null;
+            } else {
+                $item_id = (int)$item_id;
+            }
+            
+            $stmt = $db->prepare("UPDATE current_display SET item_id = ?, auction_ended = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1");
+            $stmt->execute([$item_id, $auction_ended ? 1 : 0]);
             echo json_encode(['success' => true]);
             break;
             

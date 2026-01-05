@@ -71,7 +71,7 @@ initDB();
                                 <img src="${data.display.image_path}" alt="${data.display.name}" class="item-image">
                                 <div class="item-name">${data.display.name}</div>
                             `;
-                        } else if (newItemId == -1 || data.display.auction_ended) {
+                        } else if (data.display.auction_ended) {
                             container.innerHTML = `<div class="no-item">Thank you!</div>`;
                         } else {
                             container.innerHTML = `<div class="no-item">Waiting for next item...</div>`;

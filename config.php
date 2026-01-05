@@ -47,9 +47,17 @@ function initDB() {
     $db->exec("CREATE TABLE IF NOT EXISTS current_display (
         id INT PRIMARY KEY,
         item_id INT NULL,
+        auction_ended BOOLEAN DEFAULT FALSE,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    
+    // Add auction_ended column if it doesn't exist (for existing installations)
+    try {
+        $db->exec("ALTER TABLE current_display ADD COLUMN auction_ended BOOLEAN DEFAULT FALSE");
+    } catch (PDOException $e) {
+        // Column already exists, ignore error
+    }
     
     // Insert default row if it doesn't exist
     $stmt = $db->query("SELECT COUNT(*) FROM current_display");

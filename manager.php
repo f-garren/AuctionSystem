@@ -16,6 +16,11 @@ initDB();
         <a href="index.php" class="btn btn-back">◄ Back to Home</a>
     </div>
     
+    <div id="banner" class="banner hidden">
+        <span id="bannerMessage"></span>
+        <button class="banner-close" onclick="hideBanner()">✕</button>
+    </div>
+    
     <div class="actions">
         <button class="btn btn-primary" onclick="openCreateModal()">+ Create New Item</button>
         <button class="btn btn-secondary" onclick="loadItems()">↻ Refresh</button>
@@ -62,6 +67,24 @@ initDB();
     
     <script>
         let editingItemId = null;
+        
+        function showBanner(message, type = 'success') {
+            const banner = document.getElementById('banner');
+            const bannerMessage = document.getElementById('bannerMessage');
+            bannerMessage.textContent = message;
+            banner.className = 'banner ' + type;
+            banner.classList.remove('hidden');
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                hideBanner();
+            }, 5000);
+        }
+        
+        function hideBanner() {
+            const banner = document.getElementById('banner');
+            banner.classList.add('hidden');
+        }
         
         function loadItems() {
             fetch('api.php?action=get_items')
@@ -161,8 +184,9 @@ initDB();
                 if (data.success) {
                     closeModal();
                     loadItems();
+                    showBanner(editingItemId ? 'Item updated successfully' : 'Item created successfully', 'success');
                 } else {
-                    alert('Error: ' + (data.error || 'Unknown error'));
+                    showBanner('Error: ' + (data.error || 'Unknown error'), 'error');
                 }
             });
         }
@@ -171,6 +195,7 @@ initDB();
             const formData = new FormData();
             formData.append('action', 'set_current_display');
             formData.append('item_id', itemId);
+            formData.append('auction_ended', '0');
             
             fetch('api.php', {
                 method: 'POST',
@@ -180,18 +205,14 @@ initDB();
             .then(data => {
                 if (data.success) {
                     updateCurrentDisplay();
-                    alert('Item is now being displayed on all client screens!');
+                    showBanner('Item is now being displayed on all client screens!', 'success');
                 } else {
-                    alert('Error: ' + (data.error || 'Unknown error'));
+                    showBanner('Error: ' + (data.error || 'Unknown error'), 'error');
                 }
             });
         }
         
         function deleteItem(itemId) {
-            if (!confirm('Are you sure you want to delete this item?')) {
-                return;
-            }
-            
             const formData = new FormData();
             formData.append('action', 'delete_item');
             formData.append('item_id', itemId);
@@ -204,20 +225,18 @@ initDB();
             .then(data => {
                 if (data.success) {
                     loadItems();
+                    showBanner('Item deleted successfully', 'success');
                 } else {
-                    alert('Error: ' + (data.error || 'Unknown error'));
+                    showBanner('Error: ' + (data.error || 'Unknown error'), 'error');
                 }
             });
         }
         
         function clearDisplay() {
-            if (!confirm('Clear the current display? All client screens will show "Waiting for next item..."')) {
-                return;
-            }
-            
             const formData = new FormData();
             formData.append('action', 'set_current_display');
             formData.append('item_id', '');
+            formData.append('auction_ended', '0');
             
             fetch('api.php', {
                 method: 'POST',
@@ -227,9 +246,9 @@ initDB();
             .then(data => {
                 if (data.success) {
                     updateCurrentDisplay();
-                    alert('Display cleared. All client screens now show "Waiting for next item..."');
+                    showBanner('Display cleared. All client screens now show "Waiting for next item..."', 'success');
                 } else {
-                    alert('Error: ' + (data.error || 'Unknown error'));
+                    showBanner('Error: ' + (data.error || 'Unknown error'), 'error');
                 }
             });
         }
@@ -241,7 +260,8 @@ initDB();
             
             const formData = new FormData();
             formData.append('action', 'set_current_display');
-            formData.append('item_id', '-1');
+            formData.append('item_id', '');
+            formData.append('auction_ended', '1');
             
             fetch('api.php', {
                 method: 'POST',
@@ -251,9 +271,9 @@ initDB();
             .then(data => {
                 if (data.success) {
                     updateCurrentDisplay();
-                    alert('Auction ended. All client screens now show "Thank you!"');
+                    showBanner('Auction ended. All client screens now show "Thank you!"', 'success');
                 } else {
-                    alert('Error: ' + (data.error || 'Unknown error'));
+                    showBanner('Error: ' + (data.error || 'Unknown error'), 'error');
                 }
             });
         }
