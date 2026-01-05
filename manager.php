@@ -18,7 +18,6 @@ initDB();
     
     <div id="banner" class="banner hidden">
         <span id="bannerMessage"></span>
-        <button class="banner-close" onclick="hideBanner()">✕</button>
     </div>
     
     <div class="actions">
