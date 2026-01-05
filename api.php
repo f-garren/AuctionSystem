@@ -22,6 +22,10 @@ try {
                                LEFT JOIN items i ON cd.item_id = i.id 
                                WHERE cd.id = 1");
             $display = $stmt->fetch(PDO::FETCH_ASSOC);
+            // item_id = -1 means auction ended
+            if ($display && $display['item_id'] == -1) {
+                $display['auction_ended'] = true;
+            }
             echo json_encode(['success' => true, 'display' => $display]);
             break;
             

@@ -5,28 +5,87 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: linear-gradient(180deg, #0a0e27 0%, #1a1f3a 50%, #000000 100%);
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Starry night sky effect */
+body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        radial-gradient(2px 2px at 20% 30%, #d4af37, transparent),
+        radial-gradient(2px 2px at 60% 70%, #d4af37, transparent),
+        radial-gradient(1px 1px at 50% 50%, #d4af37, transparent),
+        radial-gradient(1px 1px at 80% 10%, #d4af37, transparent),
+        radial-gradient(2px 2px at 90% 60%, #d4af37, transparent),
+        radial-gradient(1px 1px at 33% 80%, #d4af37, transparent),
+        radial-gradient(1px 1px at 15% 50%, #d4af37, transparent);
+    background-size: 200% 200%;
+    animation: twinkle 8s ease-in-out infinite;
+    opacity: 0.6;
+}
+
+@keyframes twinkle {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
 }
 
 .container {
-    background: white;
-    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(26, 31, 58, 0.95) 0%, rgba(10, 14, 39, 0.95) 100%);
+    border: 3px solid #d4af37;
+    border-radius: 15px;
     padding: 60px 40px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    box-shadow: 
+        0 0 30px rgba(212, 175, 55, 0.3),
+        0 20px 60px rgba(0, 0, 0, 0.8),
+        inset 0 0 20px rgba(212, 175, 55, 0.1);
     text-align: center;
     max-width: 500px;
     width: 90%;
+    position: relative;
+    z-index: 1;
+}
+
+.container::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    background: linear-gradient(45deg, #d4af37, #f4d03f, #d4af37);
+    border-radius: 15px;
+    z-index: -1;
+    opacity: 0.3;
+    animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 0.4; }
 }
 
 h1 {
-    color: #333;
+    color: #d4af37;
     margin-bottom: 40px;
-    font-size: 2.5em;
+    font-size: 2.8em;
+    font-weight: bold;
+    text-shadow: 
+        0 0 10px rgba(212, 175, 55, 0.5),
+        0 0 20px rgba(212, 175, 55, 0.3),
+        2px 2px 4px rgba(0, 0, 0, 0.8);
+    letter-spacing: 2px;
 }
 
 .mode-buttons {
@@ -38,31 +97,61 @@ h1 {
 .mode-btn {
     padding: 20px 40px;
     font-size: 1.3em;
-    border: none;
-    border-radius: 10px;
+    border: 2px solid #d4af37;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
     font-weight: 600;
     text-decoration: none;
     display: block;
-    color: white;
+    color: #d4af37;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.05) 100%);
+    font-family: 'Georgia', serif;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    position: relative;
+    overflow: hidden;
+}
+
+.mode-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.3), transparent);
+    transition: left 0.5s;
+}
+
+.mode-btn:hover::before {
+    left: 100%;
 }
 
 .mode-btn.manager {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.05) 100%);
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
 }
 
 .mode-btn.manager:hover {
     transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    box-shadow: 
+        0 0 25px rgba(212, 175, 55, 0.6),
+        0 10px 25px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(212, 175, 55, 0.15) 100%);
+    border-color: #f4d03f;
 }
 
 .mode-btn.client {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.05) 100%);
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
 }
 
 .mode-btn.client:hover {
     transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(245, 87, 108, 0.4);
+    box-shadow: 
+        0 0 25px rgba(212, 175, 55, 0.6),
+        0 10px 25px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(212, 175, 55, 0.15) 100%);
+    border-color: #f4d03f;
 }
-

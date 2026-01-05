@@ -19,6 +19,8 @@ initDB();
     <div class="actions">
         <button class="btn btn-primary" onclick="openCreateModal()">+ Create New Item</button>
         <button class="btn btn-secondary" onclick="loadItems()">🔄 Refresh</button>
+        <button class="btn btn-danger" onclick="clearDisplay()">Clear Display</button>
+        <button class="btn btn-danger" onclick="endAuction()">End Auction</button>
     </div>
     
     <div id="currentDisplay" class="current-display hidden">
@@ -202,6 +204,54 @@ initDB();
             .then(data => {
                 if (data.success) {
                     loadItems();
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                }
+            });
+        }
+        
+        function clearDisplay() {
+            if (!confirm('Clear the current display? All client screens will show "Waiting for next item..."')) {
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('action', 'set_current_display');
+            formData.append('item_id', '');
+            
+            fetch('api.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    updateCurrentDisplay();
+                    alert('Display cleared. All client screens now show "Waiting for next item..."');
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                }
+            });
+        }
+        
+        function endAuction() {
+            if (!confirm('End the auction? All client screens will show "Thank you!"')) {
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('action', 'set_current_display');
+            formData.append('item_id', '-1');
+            
+            fetch('api.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    updateCurrentDisplay();
+                    alert('Auction ended. All client screens now show "Thank you!"');
                 } else {
                     alert('Error: ' + (data.error || 'Unknown error'));
                 }
