@@ -13,7 +13,7 @@ initDB();
 <body>
     <div class="header">
         <h1>■ Manager Control Panel</h1>
-        <a href="index.php" class="btn btn-back">◄ Back to Home</a>
+        <a href="index.php" class="btn btn-back">◄ Function</a>
     </div>
     
     <div id="banner" class="banner hidden">
@@ -22,7 +22,7 @@ initDB();
     
     <div class="actions">
         <button class="btn btn-primary" onclick="openCreateModal()">+ Create New Item</button>
-        <button class="btn btn-secondary" onclick="loadItems()">↻ Refresh</button>
+        <button class="btn btn-secondary" onclick="loadItems()">Refresh</button>
         <button class="btn btn-danger" onclick="clearDisplay()">Clear Display</button>
         <button class="btn btn-danger" onclick="endAuction()">End Auction</button>
     </div>
@@ -51,7 +51,6 @@ initDB();
                 <div class="form-group">
                     <label for="itemImage">Image:</label>
                     <input type="file" id="itemImage" name="image" accept="image/*" required>
-                    <small id="imageNote" class="image-note">Required for new items</small>
                 </div>
                 <div id="currentImagePreview" class="current-image-preview">
                     <img id="currentImage" src="" alt="Current image">
@@ -245,7 +244,7 @@ initDB();
             .then(data => {
                 if (data.success) {
                     updateCurrentDisplay();
-                    showBanner('Display cleared. All client screens now show "Waiting for next item..."', 'success');
+                    showBanner('Display cleared.', 'success');
                 } else {
                     showBanner('Error: ' + (data.error || 'Unknown error'), 'error');
                 }
@@ -253,7 +252,7 @@ initDB();
         }
         
         function endAuction() {
-            if (!confirm('End the auction? All client screens will show "Thank you!"')) {
+            if (!confirm('End the auction?')) {
                 return;
             }
             
@@ -270,7 +269,7 @@ initDB();
             .then(data => {
                 if (data.success) {
                     updateCurrentDisplay();
-                    showBanner('Auction ended. All client screens now show "Thank you!"', 'success');
+                    showBanner('Auction ended.', 'success');
                 } else {
                     showBanner('Error: ' + (data.error || 'Unknown error'), 'error');
                 }
