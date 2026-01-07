@@ -135,8 +135,10 @@ initDB();
             document.getElementById('itemForm').reset();
             document.getElementById('itemId').value = '';
             document.getElementById('itemImage').required = true;
-            document.getElementById('imageNote').classList.remove('hidden');
-            document.getElementById('currentImagePreview').classList.add('hidden');
+            const preview = document.getElementById('currentImagePreview');
+            if (preview) {
+                preview.classList.add('hidden');
+            }
             document.getElementById('itemModal').classList.add('show');
         }
         
@@ -146,9 +148,11 @@ initDB();
             document.getElementById('itemId').value = id;
             document.getElementById('itemName').value = name;
             document.getElementById('itemImage').required = false;
-            document.getElementById('imageNote').textContent = 'Leave empty to keep current image';
-            document.getElementById('currentImagePreview').classList.remove('hidden');
-            document.getElementById('currentImage').src = imagePath;
+            const preview = document.getElementById('currentImagePreview');
+            if (preview) {
+                preview.classList.remove('hidden');
+                document.getElementById('currentImage').src = imagePath;
+            }
             document.getElementById('itemModal').classList.add('show');
         }
         
